@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "pdf_compress"
+version = "0.1.0"
+description = " Convert and compress PDF scans. Make scans suitable for imslp.org (International Music Score Library Project). See also https://imslp.org/wiki/IMSLP:Scanning_music_scores. The output files are monochrome bitmap images at a resolution of 600 dpi and the compression format CCITT group 4. ."
+authors = ["Josef Friedrich <josef@friedrich.rocks>"]
+readme = "README.rst"
+repository = "https://github.com/Josef-Friedrich/pdf_compress"
+license = "MIT"
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+PyPDF2 = "^2.6.0"
+jfscripts = "^0.5.1"
+
+[build-system]
+requires = ["poetry>=1.2.0b2"]
+build-backend = "poetry.masonry.api"
+
+[tool.poetry.scripts]
+"pdf-comporess.py" = "pdf_compress:main"
