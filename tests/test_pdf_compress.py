@@ -14,7 +14,7 @@ from _helper import TestCase, check_internet_connectifity, download
 
 from jfscripts import list_files, pdf_compress
 from jfscripts._utils import check_dependencies
-from jfscripts.pdf_compress import FilePath, State, Timer
+from pdf_compress import FilePath, State, Timer
 
 
 def get_state():
@@ -59,11 +59,11 @@ def convert_to_cli_list(run_args_list):
 
 def patch_mulitple(args, pdf_page_count=5):
     with patch('sys.argv',  ['cmd'] + list(args)), \
-         patch('jfscripts.pdf_compress.check_dependencies'), \
-         patch('jfscripts.pdf_compress.run.run') as run_run, \
-         patch('jfscripts.pdf_compress.run.check_output') as \
+         patch('pdf_compress.check_dependencies'), \
+         patch('pdf_compress.run.run') as run_run, \
+         patch('pdf_compress.run.check_output') as \
          run_check_output, \
-         patch('jfscripts.pdf_compress.do_pdfinfo_page_count') as \
+         patch('pdf_compress.do_pdfinfo_page_count') as \
          do_pdfinfo_page_count, \
          patch('os.path.getsize') as os_path_getsize, \
          patch('os.listdir') as os_listdir, \
@@ -119,13 +119,13 @@ if dependencies and internet:
 
 class TestUnit(TestCase):
 
-    @mock.patch('jfscripts.pdf_compress.run.check_output')
+    @mock.patch('pdf_compress.run.check_output')
     def test_get_pdf_info(self, check_output):
         check_output.return_value = output_pdfinfo(5)
         result = pdf_compress.do_pdfinfo_page_count('test.pdf')
         self.assertEqual(result, 5)
 
-    @mock.patch('jfscripts.pdf_compress.run.check_output')
+    @mock.patch('pdf_compress.run.check_output')
     def test_do_magick_identify(self, check_output):
         check_output.side_effect = [
             bytes('2552'.encode('utf-8')),
@@ -144,7 +144,7 @@ class TestUnit(TestCase):
             '-region', '950x50+50+950', '-level', '0%,30%',
             '-region', '50x950+0+50', '-level', '0%,30%'])
 
-    @patch('jfscripts.pdf_compress.do_magick_convert')
+    @patch('pdf_compress.do_magick_convert')
     def test_subcommand_samples(self, do_magick_convert):
         state = get_state()
         pdf_compress.subcommand_samples(FilePath('test.jpg'), state)
@@ -193,8 +193,8 @@ class TestUnit(TestCase):
             os.path.join(state.common_path, tiff2),
         ])
 
-    @patch('jfscripts.pdf_compress._do_magick_command')
-    @patch('jfscripts.pdf_compress.run.run')
+    @patch('pdf_compress._do_magick_command')
+    @patch('pdf_compress.run.run')
     def test_do_magick_convert_without_kwargs(self, run, _do_magick_command):
         _do_magick_command.return_value = ['convert']
         pdf_compress.do_magick_convert(
@@ -206,8 +206,8 @@ class TestUnit(TestCase):
              '-monochrome', 'test.tif', 'test.tiff']
         )
 
-    @patch('jfscripts.pdf_compress._do_magick_command')
-    @patch('jfscripts.pdf_compress.run.run')
+    @patch('pdf_compress._do_magick_command')
+    @patch('pdf_compress.run.run')
     def test_do_magick_convert_kwargs(self, run, _do_magick_command):
         _do_magick_command.return_value = ['convert']
         pdf_compress.do_magick_convert(
@@ -227,7 +227,7 @@ class TestUnit(TestCase):
              '-monochrome', 'test.tif', 'test.pdf']
         )
 
-    @patch('jfscripts.pdf_compress.run.run')
+    @patch('pdf_compress.run.run')
     def test_do_tesseract(self, run):
         pdf_compress.do_tesseract(FilePath('test.tiff'))
         self.assertEqual(
@@ -235,7 +235,7 @@ class TestUnit(TestCase):
             ['tesseract', '-l', 'deu+eng', 'test.tiff', 'test', 'pdf'],
         )
 
-    @patch('jfscripts.pdf_compress.run.run')
+    @patch('pdf_compress.run.run')
     def test_do_tesseract_one_language(self, run):
         pdf_compress.do_tesseract(FilePath('test.tiff'), languages=['deu'])
         self.assertEqual(
@@ -261,7 +261,7 @@ class TestUnitUnifyPageSize(TestCase):
         with patch('PyPDF2.PdfFileReader') as reader, \
              patch('PyPDF2.PdfFileWriter'), \
              patch('PyPDF2.pdf.PageObject.createBlankPage') as blank, \
-             patch('jfscripts.pdf_compress.open'):
+             patch('pdf_compress.open'):
             reader.return_value.pages = self.mock_pdf2_pages(*dimensions)
             pdf_compress.unify_page_size(
                 FilePath('test.pdf'),
