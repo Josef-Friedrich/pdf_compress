@@ -447,7 +447,7 @@ def get_parser():
 # do_tesseract
 
 
-def _do_magick_command(command):
+def _do_magick_command(command: str):
     """ImageMagick version 7 introduces a new top level command named
     `magick`. Use this newer command if present.
 

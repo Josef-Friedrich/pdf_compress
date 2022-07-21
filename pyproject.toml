@@ -25,4 +25,4 @@ requires = ["poetry>=1.2.0b2"]
 build-backend = "poetry.masonry.api"
 
 [tool.poetry.scripts]
-"pdf-comporess.py" = "pdf_compress:main"
+"pdf-compress.py" = "pdf_compress:main"
