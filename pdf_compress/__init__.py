@@ -713,8 +713,8 @@ def unify_page_size(input_file, output_file, margin=0):
         blank.mergeScaledTranslatedPage(
             page,
             1,
-            margin + (max_width - width) / 2,
-            margin + (max_height - height) / 2,
+            float(margin + (max_width - width) / 2),
+            float(margin + (max_height - height) / 2),
         )
         output_pdf.addPage(blank)
 

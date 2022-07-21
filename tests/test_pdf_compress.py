@@ -11,9 +11,10 @@ from unittest import mock
 from unittest.mock import Mock, patch
 
 from _helper import TestCase, check_internet_connectifity, download
-from jfscripts import list_files, pdf_compress
+from jfscripts import list_files
 from jfscripts._utils import check_dependencies
 
+import pdf_compress
 from pdf_compress import FilePath, State, Timer
 
 
@@ -538,9 +539,6 @@ class TestModuleGlobals(TestCase):
 
 
 class TestIntegration(TestCase):
-    def test_command_line_interface(self):
-        self.assertIsExecutable("pdf_compress")
-
     def test_option_version(self):
         output = subprocess.check_output(["pdf-compress.py", "--version"])
         self.assertTrue(output)
