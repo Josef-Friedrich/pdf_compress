@@ -10,7 +10,6 @@ import time
 import uuid
 
 import PyPDF2
-
 from jfscripts import __version__, list_files
 from jfscripts._utils import FilePath, Run, check_dependencies
 
@@ -18,22 +17,22 @@ run = Run()
 state = None
 """The global :class:`State` object."""
 
-identifier = 'magick'
+identifier = "magick"
 """To allow better assignment of the output files."""
 
-tmp_identifier = '{}_{}'.format(identifier, uuid.uuid1())
+tmp_identifier = "{}_{}".format(identifier, uuid.uuid1())
 """Used for the identification of temporary files."""
 
 args = None
 """The argparse object."""
 
 dependencies = (
-    ('convert', 'imagemagick'),
-    ('identify', 'imagemagick'),
-    ('pdfimages', 'poppler'),
-    ('pdfinfo', 'poppler'),
-    'pdftk',
-    'tesseract',
+    ("convert", "imagemagick"),
+    ("identify", "imagemagick"),
+    ("pdfimages", "poppler"),
+    ("pdfinfo", "poppler"),
+    "pdftk",
+    "tesseract",
 )
 
 
@@ -47,12 +46,12 @@ def check_threshold(value):
     :return: A normalized threshold string (`90%`)
     :rtype: string
     """
-    value = re.sub(r'%$', '', str(value))
+    value = re.sub(r"%$", "", str(value))
     value = int(value)
     if value < 0 or value > 100:
-        message = '{} is an invalid int value. Should be 0-100'.format(value)
+        message = "{} is an invalid int value. Should be 0-100".format(value)
         raise argparse.ArgumentTypeError(message)
-    return '{}%'.format(value)
+    return "{}%".format(value)
 
 
 def get_parser():
@@ -62,52 +61,52 @@ def get_parser():
     :rtype: argparse.ArgumentParser
     """
     parser = argparse.ArgumentParser(
-        description='Convert and compress PDF scans. \
+        description="Convert and compress PDF scans. \
         Make scans suitable for imslp.org (International Music Score Library \
         Project). See also https://imslp.org/wiki/IMSLP:Scanning_music_scores \
         The output files are monochrome bitmap images at a resolution of \
-        600 dpi and the compression format CCITT group 4.',
+        600 dpi and the compression format CCITT group 4.",
     )
 
     parser.add_argument(
-        '-c',
-        '--colorize',
-        action='store_true',
-        help='Colorize the terminal output.',
+        "-c",
+        "--colorize",
+        action="store_true",
+        help="Colorize the terminal output.",
     )
 
     parser.add_argument(
-        '-m',
-        '--multiprocessing',
-        action='store_true',
+        "-m",
+        "--multiprocessing",
+        action="store_true",
         default=False,
-        help='Use multiprocessing to run commands in parallel.',
+        help="Use multiprocessing to run commands in parallel.",
     )
 
     parser.add_argument(
-        '-N',
-        '--no-cleanup',
-        action='store_true',
-        help='Don’t clean up the temporary files.',
+        "-N",
+        "--no-cleanup",
+        action="store_true",
+        help="Don’t clean up the temporary files.",
     )
 
     parser.add_argument(
-        '-v',
-        '--verbose',
-        action='store_true',
-        help='Make the command line output more verbose.',
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Make the command line output more verbose.",
     )
 
     parser.add_argument(
-        '-V',
-        '--version',
-        action='version',
-        version='%(prog)s {version}'.format(version=__version__),
+        "-V",
+        "--version",
+        action="version",
+        version="%(prog)s {version}".format(version=__version__),
     )
 
     subcommand = parser.add_subparsers(
-        dest='subcommand',
-        help='Subcommand',
+        dest="subcommand",
+        help="Subcommand",
     )
     subcommand.required = True
 
@@ -116,11 +115,11 @@ def get_parser():
     ##
 
     convert_parser = subcommand.add_parser(
-        'convert',
-        aliases=['con', 'c'],
-        description='Convert scanned images (can be many image '
-        'file formats or a PDF files) in monochrome bitmap images. The '
-        'resulting images are compressed using the CCITT group 4 compression.'
+        "convert",
+        aliases=["con", "c"],
+        description="Convert scanned images (can be many image "
+        "file formats or a PDF files) in monochrome bitmap images. The "
+        "resulting images are compressed using the CCITT group 4 compression.",
     )
 
     convert_parser_color = convert_parser.add_mutually_exclusive_group()
@@ -128,196 +127,193 @@ def get_parser():
 
     # auto_black_white
     convert_parser_color.add_argument(
-        '-a',
-        '--auto-black-white',
-        action='store_true',
-        help='The same as “'
-        '--deskew '
-        '--join '
-        '--ocr '
-        '--pdf '
-        '--resize '
-        '--trim '
-        '--unify”',
+        "-a",
+        "--auto-black-white",
+        action="store_true",
+        help="The same as “"
+        "--deskew "
+        "--join "
+        "--ocr "
+        "--pdf "
+        "--resize "
+        "--trim "
+        "--unify”",
     )
 
     # auto_color
     convert_parser_color.add_argument(
-        '-C',
-        '--auto-color',
-        action='store_true',
-        help='The same as “'
-        '--color '
-        '--deskew '
-        '--join '
-        '--ocr '
-        '--pdf '
-        '--resize '
-        '--trim '
-        '--unify”',
+        "-C",
+        "--auto-color",
+        action="store_true",
+        help="The same as “"
+        "--color "
+        "--deskew "
+        "--join "
+        "--ocr "
+        "--pdf "
+        "--resize "
+        "--trim "
+        "--unify”",
     )
 
     # auto_png
     convert_parser_color.add_argument(
-        '-P',
-        '--auto-png',
-        action='store_true',
-        help='The same as “'
-        '--deskew '
-        '--resize '
-        '--trim”',
+        "-P",
+        "--auto-png",
+        action="store_true",
+        help="The same as “" "--deskew " "--resize " "--trim”",
     )
 
     # backup
     convert_parser.add_argument(
-        '-b',
-        '--backup',
-        action='store_true',
-        help='Backup original images (add _backup.ext to filename).',
+        "-b",
+        "--backup",
+        action="store_true",
+        help="Backup original images (add _backup.ext to filename).",
     )
 
     # blur
     convert_parser.add_argument(
-        '--blur',
+        "--blur",
         nargs=1,
         default=False,
-        help='Blur images for better jpeg2000 compression rate.',
+        help="Blur images for better jpeg2000 compression rate.",
     )
 
     # border
     convert_parser.add_argument(
-        '-B',
-        '--border',
-        action='store_true',
-        help='Frame the images with a white border.',
+        "-B",
+        "--border",
+        action="store_true",
+        help="Frame the images with a white border.",
     )
 
     # color
     convert_parser.add_argument(
-        '-c',
-        '--color',
-        action='store_true',
-        help='The input files are colored images.',
+        "-c",
+        "--color",
+        action="store_true",
+        help="The input files are colored images.",
     )
 
     # deskew
     convert_parser.add_argument(
-        '-d',
-        '--deskew',
-        action='store_true',
-        help='Straighten the images.',
+        "-d",
+        "--deskew",
+        action="store_true",
+        help="Straighten the images.",
     )
 
     # enlighten_border
     convert_parser.add_argument(
-        '-e',
-        '--enlighten-border',
-        action='store_true',
-        help='Enlighten the border.',
+        "-e",
+        "--enlighten-border",
+        action="store_true",
+        help="Enlighten the border.",
     )
 
     # force
     convert_parser.add_argument(
-        '-f',
-        '--force',
-        action='store_true',
-        help='Overwrite the output file even if it exists and it seems to be '
-        'already converted.',
+        "-f",
+        "--force",
+        action="store_true",
+        help="Overwrite the output file even if it exists and it seems to be "
+        "already converted.",
     )
 
     # join
     convert_parser.add_argument(
-        '-j',
-        '--join',
-        action='store_true',
-        help='Join single paged PDF files to one PDF file. This option takes '
-        'only effect with the option --pdf.',
+        "-j",
+        "--join",
+        action="store_true",
+        help="Join single paged PDF files to one PDF file. This option takes "
+        "only effect with the option --pdf.",
     )
 
     # ocr
     convert_parser.add_argument(
-        '-o',
-        '--ocr',
-        action='store_true',
+        "-o",
+        "--ocr",
+        action="store_true",
         default=False,
-        help='Perform optical character recognition (OCR) on the input files.'
-        'The output format must be PDF.',
+        help="Perform optical character recognition (OCR) on the input files."
+        "The output format must be PDF.",
     )
 
     # ocr_lanuage
     convert_parser.add_argument(
-        '-l',
-        '--ocr-language',
-        nargs='+',
-        help='Run tesseract --list-langs to get your installed languages.',
+        "-l",
+        "--ocr-language",
+        nargs="+",
+        help="Run tesseract --list-langs to get your installed languages.",
     )
 
     # pdf
     convert_parser.add_argument(
-        '-p',
-        '--pdf',
-        action='store_true',
-        help='Generate a PDF file.',
+        "-p",
+        "--pdf",
+        action="store_true",
+        help="Generate a PDF file.",
     )
 
     # png
     convert_parser.add_argument(
-        '-n',
-        '--png',
-        action='store_true',
-        help='Generate a PNG file.',
+        "-n",
+        "--png",
+        action="store_true",
+        help="Generate a PNG file.",
     )
 
     # quality
     convert_parser_compress.add_argument(
-        '-q',
-        '--quality',
+        "-q",
+        "--quality",
         default=False,
-        help='Compress the input images in a specific quality. The command '
-        'automatically turns into the color mode.',
+        help="Compress the input images in a specific quality. The command "
+        "automatically turns into the color mode.",
     )
 
     # resize
     convert_parser.add_argument(
-        '-r',
-        '--resize',
-        action='store_true',
-        help='Resize 200 percent.',
+        "-r",
+        "--resize",
+        action="store_true",
+        help="Resize 200 percent.",
     )
 
     # threshold
     convert_parser_compress.add_argument(
-        '-t',
-        '--threshold',
-        default='50%',
+        "-t",
+        "--threshold",
+        default="50%",
         type=check_threshold,
-        help='Threshold for monochrome, black and white images, default 50 \
+        help="Threshold for monochrome, black and white images, default 50 \
         percent. Colors above the threshold will be white and below will be \
-        black.',
+        black.",
     )
 
     # trim
     convert_parser.add_argument(
-        '-T',
-        '--trim',
-        action='store_true',
-        help='This option removes any edges that are exactly the same color \
-        as the corner pixels.',
+        "-T",
+        "--trim",
+        action="store_true",
+        help="This option removes any edges that are exactly the same color \
+        as the corner pixels.",
     )
 
     # unify
     convert_parser.add_argument(
-        '-u',
-        '--unify',
-        action='store_true',
-        help='Unify the page size of all pages in a PDF File. The output must \
-        be a joined PDF.',
+        "-u",
+        "--unify",
+        action="store_true",
+        help="Unify the page size of all pages in a PDF File. The output must \
+        be a joined PDF.",
     )
 
     convert_parser.add_argument(
-        'input_files',
-        help=list_files.doc_examples('%(prog)s', 'tiff'),
-        nargs='+',
+        "input_files",
+        help=list_files.doc_examples("%(prog)s", "tiff"),
+        nargs="+",
     )
 
     ##
@@ -325,17 +321,17 @@ def get_parser():
     ##
 
     extract_parser = subcommand.add_parser(
-        'extract',
-        aliases=['ex', 'e'],
-        description='Extract images from a PDF file and export them in the '
-        'TIFF format.'
+        "extract",
+        aliases=["ex", "e"],
+        description="Extract images from a PDF file and export them in the "
+        "TIFF format.",
     )
 
     extract_parser.add_argument(
-        'input_files',
-        metavar='input_file',
-        help='A pdf file',
-        nargs='+',
+        "input_files",
+        metavar="input_file",
+        help="A pdf file",
+        nargs="+",
     )
 
     ##
@@ -343,32 +339,32 @@ def get_parser():
     ##
 
     join_parser = subcommand.add_parser(
-        'join',
-        aliases=['jn', 'j'],
-        description='Join the input files into a single PDF file. If the '
-        'input file is not PDF file, it is converted into a monochrome CCITT '
-        'Group 4 compressed PDF file.',
+        "join",
+        aliases=["jn", "j"],
+        description="Join the input files into a single PDF file. If the "
+        "input file is not PDF file, it is converted into a monochrome CCITT "
+        "Group 4 compressed PDF file.",
     )
 
     join_parser.add_argument(
-        '-o',
-        '--ocr',
-        action='store_true',
+        "-o",
+        "--ocr",
+        action="store_true",
         default=False,
-        help='Perform optical character recognition (OCR) on the input files.',
+        help="Perform optical character recognition (OCR) on the input files.",
     )
 
     join_parser.add_argument(
-        '-l',
-        '--ocr-language',
-        nargs='+',
-        help='Run tesseract --list-langs to get your installed languages.',
+        "-l",
+        "--ocr-language",
+        nargs="+",
+        help="Run tesseract --list-langs to get your installed languages.",
     )
 
     join_parser.add_argument(
-        'input_files',
-        help=list_files.doc_examples('%(prog)s', 'png'),
-        nargs='+',
+        "input_files",
+        help=list_files.doc_examples("%(prog)s", "png"),
+        nargs="+",
     )
 
     ##
@@ -376,39 +372,39 @@ def get_parser():
     ##
 
     samples_parser = subcommand.add_parser(
-        'samples',
-        aliases=['sp', 's'],
-        description='Convert the samge image with different threshold values \
-        to find the best threshold value.',
+        "samples",
+        aliases=["sp", "s"],
+        description="Convert the samge image with different threshold values \
+        to find the best threshold value.",
     )
 
     samples_parser.add_argument(
-        'input_files',
-        metavar='input_file',
-        help='A image or a PDF file. The script selects randomly one page of \
-        a multipaged PDF to build the series with differnt threshold values.',
+        "input_files",
+        metavar="input_file",
+        help="A image or a PDF file. The script selects randomly one page of \
+        a multipaged PDF to build the series with differnt threshold values.",
     )
 
     samples_parser.add_argument(
-        '-b',
-        '--blur',
-        action='store_true',
-        help='Convert images on different blur values.',
+        "-b",
+        "--blur",
+        action="store_true",
+        help="Convert images on different blur values.",
     )
 
     samples_parser.add_argument(
-        '-q',
-        '--quality',
-        action='store_true',
-        help='Compress to JPEG2000 images in different quality steps.',
+        "-q",
+        "--quality",
+        action="store_true",
+        help="Compress to JPEG2000 images in different quality steps.",
     )
 
     samples_parser.add_argument(
-        '-t',
-        '--threshold',
-        action='store_true',
-        help='Convert images on different threshold values to monochrome \
-        black and white images.',
+        "-t",
+        "--threshold",
+        action="store_true",
+        help="Convert images on different threshold values to monochrome \
+        black and white images.",
     )
 
     ##
@@ -416,23 +412,23 @@ def get_parser():
     ##
 
     unify_parser = subcommand.add_parser(
-        'unify',
-        aliases=['un', 'u'],
-        description='Unify the page size of all pages in a PDF File.',
+        "unify",
+        aliases=["un", "u"],
+        description="Unify the page size of all pages in a PDF File.",
     )
 
     unify_parser.add_argument(
-        'input_files',
-        metavar='input_file',
-        help='A PDF file',
+        "input_files",
+        metavar="input_file",
+        help="A PDF file",
     )
 
     # margin
     unify_parser.add_argument(
-        '-m',
-        '--margin',
+        "-m",
+        "--margin",
         nargs=1,
-        help='Add a margin around each page in the PDF file.',
+        help="Add a margin around each page in the PDF file.",
     )
 
     return parser
@@ -457,8 +453,8 @@ def _do_magick_command(command):
 
     :return: A list of command segments
     """
-    if shutil.which('magick'):
-        return ['magick', command]
+    if shutil.which("magick"):
+        return ["magick", command]
     else:
         return [command]
 
@@ -479,22 +475,33 @@ def _do_magick_convert_enlighten_border(width, height):
     # right
     # bottom
     # left
-    r = ('{}x{}'.format(width - border, border),
-         '{}x{}+{}'.format(border, height - border, width - border),
-         '{}x{}+{}+{}'.format(width - border, border, border, height - border),
-         '{}x{}+{}+{}'.format(border, height - border, 0, border))
+    r = (
+        "{}x{}".format(width - border, border),
+        "{}x{}+{}".format(border, height - border, width - border),
+        "{}x{}+{}+{}".format(width - border, border, border, height - border),
+        "{}x{}+{}+{}".format(border, height - border, 0, border),
+    )
 
     out = []
     for region in r:
-        out += ['-region', region, '-level', '0%,30%']
+        out += ["-region", region, "-level", "0%,30%"]
 
     return out
 
 
-def do_magick_convert(input_file, output_file, threshold=None,
-                      enlighten_border=False, border=False, resize=False,
-                      deskew=False, trim=False, color=False, quality=75,
-                      blur=False):
+def do_magick_convert(
+    input_file,
+    output_file,
+    threshold=None,
+    enlighten_border=False,
+    border=False,
+    resize=False,
+    deskew=False,
+    trim=False,
+    color=False,
+    quality=75,
+    blur=False,
+):
     """
     Convert a input image file using the subcommand convert of the
     imagemagick suite.
@@ -503,41 +510,41 @@ def do_magick_convert(input_file, output_file, threshold=None,
     :rtype: jfscripts._utils.FilePath
     """
 
-    cmd_args = _do_magick_command('convert')
-    cmd_args += ['-units', 'PixelsPerInch']
+    cmd_args = _do_magick_command("convert")
+    cmd_args += ["-units", "PixelsPerInch"]
 
     if enlighten_border:
         info_input_file = do_magick_identify(input_file)
         cmd_args += _do_magick_convert_enlighten_border(
-            info_input_file['width'],
-            info_input_file['height'],
+            info_input_file["width"],
+            info_input_file["height"],
         )
 
     if resize:
-        cmd_args += ['-resize', '200%']
+        cmd_args += ["-resize", "200%"]
 
     if deskew:
-        cmd_args += ['-deskew', '40%']
+        cmd_args += ["-deskew", "40%"]
 
     if threshold and not color:
-        cmd_args += ['-threshold', threshold]
+        cmd_args += ["-threshold", threshold]
 
     if trim:
-        cmd_args += ['-trim', '+repage']
+        cmd_args += ["-trim", "+repage"]
 
     if border:
-        cmd_args += ['-border', '5%', '-bordercolor', '#FFFFFF']
+        cmd_args += ["-border", "5%", "-bordercolor", "#FFFFFF"]
 
     if blur:
-        cmd_args += ['-blur', str(blur)]
+        cmd_args += ["-blur", str(blur)]
 
     if not color:
-        cmd_args += ['-compress', 'Group4', '-monochrome']
+        cmd_args += ["-compress", "Group4", "-monochrome"]
     else:
-        cmd_args += ['-quality', str(quality)]
+        cmd_args += ["-quality", str(quality)]
 
-    if color and output_file.extension == 'pdf':
-        cmd_args += ['-compress', 'JPEG2000']
+    if color and output_file.extension == "pdf":
+        cmd_args += ["-compress", "JPEG2000"]
 
     cmd_args += [str(input_file), str(output_file)]
 
@@ -553,14 +560,16 @@ def do_magick_identify(input_file):
     :return: A directory with the keys `width`, `height` and `colors`.
     :rtype: dict
     """
+
     def _get_by_format(input_file, format):
-        return run.check_output(_do_magick_command('identify') + ['-format',
-                                format, str(input_file)]).decode('utf-8')
+        return run.check_output(
+            _do_magick_command("identify") + ["-format", format, str(input_file)]
+        ).decode("utf-8")
 
     return {
-        'width': int(_get_by_format(input_file, '%w')),
-        'height': int(_get_by_format(input_file, '%h')),
-        'colors': int(_get_by_format(input_file, '%k')),
+        "width": int(_get_by_format(input_file, "%w")),
+        "height": int(_get_by_format(input_file, "%h")),
+        "colors": int(_get_by_format(input_file, "%k")),
     }
 
 
@@ -577,15 +586,15 @@ def do_pdfimages(pdf_file, state, page_number=None, use_tmp_identifier=True):
     :rtype: subprocess.CompletedProcess
     """
     if use_tmp_identifier:
-        image_root = '{}_{}'.format(pdf_file.basename, tmp_identifier)
+        image_root = "{}_{}".format(pdf_file.basename, tmp_identifier)
     else:
         image_root = pdf_file.basename
 
-    command = ['pdfimages', '-tiff', str(pdf_file), image_root]
+    command = ["pdfimages", "-tiff", str(pdf_file), image_root]
 
     if page_number:
         page_number = str(page_number)
-        page_segments = ['-f', page_number, '-l', page_number]
+        page_segments = ["-f", page_number, "-l", page_number]
         command = command[:2] + page_segments + command[2:]
     return run.run(command, cwd=state.common_path)
 
@@ -598,8 +607,8 @@ def do_pdfinfo_page_count(pdf_file):
     :return: Page count
     :rtype: int
     """
-    output = run.check_output(['pdfinfo', str(pdf_file)], encoding='utf-8')
-    page_count = re.search(r'Pages:\s*([0-9]*)', output)
+    output = run.check_output(["pdfinfo", str(pdf_file)], encoding="utf-8")
+    page_count = re.search(r"Pages:\s*([0-9]*)", output)
     return int(page_count.group(1))
 
 
@@ -612,33 +621,33 @@ def do_pdftk_cat(pdf_files, state):
 
     :return: None
     """
-    cmd = ['pdftk']
+    cmd = ["pdftk"]
 
     pdf_file_paths = map(lambda pdf_file: str(pdf_file), pdf_files)
     cmd += pdf_file_paths
 
     output_file_path = os.path.join(
-        state.common_path,
-        '{}_magick.pdf'.format(state.first_input_file.basename)
+        state.common_path, "{}_magick.pdf".format(state.first_input_file.basename)
     )
-    cmd += ['cat', 'output', output_file_path]
+    cmd += ["cat", "output", output_file_path]
 
     result = run.run(cmd)
     if result.returncode == 0:
-        print('Successfully created: {}'.format(output_file_path))
+        print("Successfully created: {}".format(output_file_path))
 
 
-def do_tesseract(input_file, languages=['deu', 'eng']):
-    cmd_args = ['tesseract']
+def do_tesseract(input_file, languages=["deu", "eng"]):
+    cmd_args = ["tesseract"]
     if languages:
-        cmd_args += ['-l', '+'.join(languages)]
-    cmd_args += [str(input_file), input_file.base, 'pdf']
+        cmd_args += ["-l", "+".join(languages)]
+    cmd_args += [str(input_file), input_file.base, "pdf"]
     return run.run(cmd_args, stderr=run.PIPE, stdout=run.PIPE)
 
 
 ###############################################################################
 #
 ###############################################################################
+
 
 def collect_images(state):
     """Collection all images using the temporary identifier in a common path.
@@ -652,8 +661,10 @@ def collect_images(state):
     prefix = state.common_path
     out = []
     for input_file in os.listdir(prefix):
-        if tmp_identifier in input_file and \
-           os.path.getsize(os.path.join(prefix, input_file)) > 200:
+        if (
+            tmp_identifier in input_file
+            and os.path.getsize(os.path.join(prefix, input_file)) > 200
+        ):
             out.append(os.path.join(prefix, input_file))
     out.sort()
     return out
@@ -673,7 +684,7 @@ def cleanup(state):
 
 
 def unify_page_size(input_file, output_file, margin=0):
-    input_file = open(str(input_file), 'rb')
+    input_file = open(str(input_file), "rb")
     input_pdf = PyPDF2.PdfFileReader(input_file)
 
     output_pdf = PyPDF2.PdfFileWriter()
@@ -700,14 +711,14 @@ def unify_page_size(input_file, output_file, margin=0):
             max_height + 2 * margin,
         )
         blank.mergeScaledTranslatedPage(
-                page,
-                1,
-                margin + (max_width - width) / 2,
-                margin + (max_height - height) / 2,
+            page,
+            1,
+            margin + (max_width - width) / 2,
+            margin + (max_height - height) / 2,
         )
         output_pdf.addPage(blank)
 
-    output_file = open(str(output_file), 'wb')
+    output_file = open(str(output_file), "wb")
     output_pdf.write(output_file)
 
 
@@ -725,14 +736,14 @@ def subcommand_convert_file(arguments):
     input_file = arguments[0]
 
     if args.color:
-        intermediate_extension = 'jp2'
+        intermediate_extension = "jp2"
     else:
-        intermediate_extension = 'tiff'
+        intermediate_extension = "tiff"
 
     if args.pdf:
-        extension = 'pdf'
+        extension = "pdf"
     elif args.auto_png or args.png:
-        extension = 'png'
+        extension = "png"
     else:
         extension = intermediate_extension
 
@@ -740,19 +751,20 @@ def subcommand_convert_file(arguments):
         extension = intermediate_extension
 
     if not args.join:
-        output_file = input_file.new(extension=extension,
-                                     del_substring='_' + tmp_identifier)
+        output_file = input_file.new(
+            extension=extension, del_substring="_" + tmp_identifier
+        )
     else:
         output_file = input_file.new(extension=extension)
 
     if input_file == output_file:
         info_output_file = do_magick_identify(output_file)
-        if info_output_file['colors'] == 2 and not args.force:
-            print('The output file has already been converted.')
+        if info_output_file["colors"] == 2 and not args.force:
+            print("The output file has already been converted.")
             return output_file
 
         if args.backup:
-            backup = input_file.new(append='_backup')
+            backup = input_file.new(append="_backup")
             shutil.copy2(str(input_file), str(backup))
 
     completed_process = do_magick_convert(
@@ -770,17 +782,16 @@ def subcommand_convert_file(arguments):
     )
 
     if completed_process.returncode != 0:
-        raise RuntimeError('magick convert failed.')
+        raise RuntimeError("magick convert failed.")
 
     if args.ocr:
-        if output_file.extension not in ['tiff', 'jp2']:
-            raise RuntimeError('Tesseract needs a tiff or a jp2 file as '
-                               'input.')
+        if output_file.extension not in ["tiff", "jp2"]:
+            raise RuntimeError("Tesseract needs a tiff or a jp2 file as " "input.")
         completed_process = do_tesseract(output_file, args.ocr_language)
         if completed_process.returncode != 0:
-            raise RuntimeError('tesseract failed.')
+            raise RuntimeError("tesseract failed.")
         os.remove(str(output_file))
-        output_file = output_file.new(extension='pdf')
+        output_file = output_file.new(extension="pdf")
 
     return output_file
 
@@ -788,21 +799,21 @@ def subcommand_convert_file(arguments):
 def subcommand_join_convert_pdf(arguments):
     input_file = arguments[0]
     if args.ocr:
-        extension = 'tiff'
+        extension = "tiff"
     else:
-        extension = 'pdf'
+        extension = "pdf"
 
     output_file = input_file.new(extension=extension)
     process = do_magick_convert(input_file, output_file)
     if process.returncode != 0:
-        raise RuntimeError('join: convert to pdf failed.')
+        raise RuntimeError("join: convert to pdf failed.")
 
     if args.ocr:
         process = do_tesseract(output_file)
         if process.returncode != 0:
-            raise RuntimeError('join: ocr failed.')
+            raise RuntimeError("join: ocr failed.")
         os.remove(str(output_file))
-        output_file = output_file.new(extension='pdf')
+        output_file = output_file.new(extension="pdf")
 
     return output_file
 
@@ -821,43 +832,57 @@ def subcommand_samples(input_file, state):
     args = state.args
 
     def fix_output_path(output_file):
-        output_file = str(output_file).replace('_-000', '')
+        output_file = str(output_file).replace("_-000", "")
         return FilePath(output_file, absolute=True)
 
     if state.input_is_pdf:
         page_count = do_pdfinfo_page_count(input_file)
         page_number = random.randint(1, page_count)
-        print('Used page number {} of {} pages to generate a series of images '
-              'with different threshold values.'
-              .format(page_number, page_count))
+        print(
+            "Used page number {} of {} pages to generate a series of images "
+            "with different threshold values.".format(page_number, page_count)
+        )
         do_pdfimages(input_file, state, page_number)
         images = collect_images(state)
         input_file = FilePath(images[0], absolute=True)
 
     if args.threshold:
         for threshold in range(40, 100, 5):
-            appendix = '_threshold-{}'.format(threshold)
-            output_file = input_file.new(extension='tiff', append=appendix,
-                                         del_substring=tmp_identifier)
-            output_file = str(output_file).replace('_-000', '')
-            do_magick_convert(input_file, fix_output_path(output_file),
-                              threshold='{}%'.format(threshold))
+            appendix = "_threshold-{}".format(threshold)
+            output_file = input_file.new(
+                extension="tiff", append=appendix, del_substring=tmp_identifier
+            )
+            output_file = str(output_file).replace("_-000", "")
+            do_magick_convert(
+                input_file,
+                fix_output_path(output_file),
+                threshold="{}%".format(threshold),
+            )
 
     if args.quality:
         for quality in range(40, 100, 5):
-            appendix = '_quality-{}'.format(quality)
-            output_file = input_file.new(extension='pdf', append=appendix,
-                                         del_substring=tmp_identifier)
-            do_magick_convert(input_file, fix_output_path(output_file),
-                              color=True, quality=quality)
+            appendix = "_quality-{}".format(quality)
+            output_file = input_file.new(
+                extension="pdf", append=appendix, del_substring=tmp_identifier
+            )
+            do_magick_convert(
+                input_file, fix_output_path(output_file), color=True, quality=quality
+            )
 
     if args.blur:
         for blur in (1, 2, 3, 4, 5):
-            appendix = '_blur-{}'.format(blur)
-            output_file = input_file.new(extension='pdf', append=appendix,
-                                         del_substring=tmp_identifier)
-            do_magick_convert(input_file, fix_output_path(output_file),
-                              color=True, blur=blur, quality=100)
+            appendix = "_blur-{}".format(blur)
+            output_file = input_file.new(
+                extension="pdf", append=appendix, del_substring=tmp_identifier
+            )
+            do_magick_convert(
+                input_file,
+                fix_output_path(output_file),
+                color=True,
+                blur=blur,
+                quality=100,
+            )
+
 
 ###############################################################################
 #
@@ -881,7 +906,7 @@ class Timer(object):
         :rtype: str
         """
         self.end = time.time()
-        return '{:.1f}s'.format(self.end - self.begin)
+        return "{:.1f}s".format(self.end - self.begin)
 
 
 class State(object):
@@ -901,11 +926,10 @@ class State(object):
         else:
             self.input_files = list_files.list_files(self.args.input_files)
 
-        self.common_path = \
-            list_files.common_path(self.input_files)
+        self.common_path = list_files.common_path(self.input_files)
         """The common path prefix of all input files."""
 
-        if self.common_path == '':
+        if self.common_path == "":
             self.common_path = self.cwd
         self.first_input_file = FilePath(self.input_files[0], absolute=True)
         """The first input file."""
@@ -913,7 +937,7 @@ class State(object):
         self.input_is_pdf = False
         """Boolean that indicates if the first file is a pdf."""
 
-        if self.first_input_file.extension.lower() == 'pdf':
+        if self.first_input_file.extension.lower() == "pdf":
             self.input_is_pdf = True
 
 
@@ -950,7 +974,7 @@ def main():
     # convert
     ##
 
-    if args.subcommand in ['convert', 'cv', 'c']:
+    if args.subcommand in ["convert", "cv", "c"]:
 
         if args.join and not args.pdf:
             args.pdf = True
@@ -983,9 +1007,9 @@ def main():
         if args.blur:
             args.blur = args.blur[0]
 
-        if state.first_input_file.extension == 'pdf':
+        if state.first_input_file.extension == "pdf":
             if len(state.input_files) > 1:
-                raise ValueError('Specify only one PDF file.')
+                raise ValueError("Specify only one PDF file.")
             do_pdfimages(state.first_input_file, state)
             input_files = collect_images(state)
         else:
@@ -1002,17 +1026,15 @@ def main():
         else:
             output_files = []
             for input_file in input_files:
-                output_files.append(
-                    subcommand_convert_file((input_file, state))
-                )
+                output_files.append(subcommand_convert_file((input_file, state)))
 
         if args.join:
             do_pdftk_cat(output_files, state)
 
         if args.unify and len(state.input_files) > 1:
             unify_page_size(
-                state.first_input_file.new(append='_magick'),
-                state.first_input_file.new(append='_unifed'),
+                state.first_input_file.new(append="_magick"),
+                state.first_input_file.new(append="_unifed"),
                 margin=0,
             )
 
@@ -1023,17 +1045,18 @@ def main():
     # extract
     ##
 
-    elif args.subcommand in ['extract', 'ex', 'e']:
+    elif args.subcommand in ["extract", "ex", "e"]:
         if not state.input_is_pdf:
-            raise ValueError('Specify a PDF file.')
-        do_pdfimages(state.first_input_file, state, page_number=None,
-                     use_tmp_identifier=False)
+            raise ValueError("Specify a PDF file.")
+        do_pdfimages(
+            state.first_input_file, state, page_number=None, use_tmp_identifier=False
+        )
 
     ##
     # join
     ##
 
-    elif args.subcommand in ['join', 'jn', 'j']:
+    elif args.subcommand in ["join", "jn", "j"]:
         input_files = convert_file_paths(state.input_files)
         if args.multiprocessing:
             pool = multiprocessing.Pool()
@@ -1044,18 +1067,15 @@ def main():
         else:
             files_converted = []
             for input_file in input_files:
-                files_converted.append(
-                    subcommand_join_convert_pdf((input_file, state))
-                )
+                files_converted.append(subcommand_join_convert_pdf((input_file, state)))
         do_pdftk_cat(files_converted, state)
 
     ##
     # samples
     ##
 
-    elif args.subcommand in ['samples', 'sp', 's']:
-        if args.blur == args.quality == \
-           args.threshold is False:
+    elif args.subcommand in ["samples", "sp", "s"]:
+        if args.blur == args.quality == args.threshold is False:
             args.blur = True
             args.quality = True
             args.threshold = True
@@ -1068,12 +1088,12 @@ def main():
     # unify
     ##
 
-    elif args.subcommand in ['unify', 'un', 'u']:
-        if state.first_input_file.extension != 'pdf':
-            raise ValueError('Specify a PDF file.')
+    elif args.subcommand in ["unify", "un", "u"]:
+        if state.first_input_file.extension != "pdf":
+            raise ValueError("Specify a PDF file.")
 
         if len(state.input_files) > 1:
-            raise ValueError('Specify only one PDF file.')
+            raise ValueError("Specify only one PDF file.")
 
         if args.margin:
             margin = int(args.margin[0])
@@ -1082,12 +1102,12 @@ def main():
 
         unify_page_size(
             state.first_input_file,
-            state.first_input_file.new(append='_unifed'),
+            state.first_input_file.new(append="_unifed"),
             margin,
         )
 
-    print('Execution time: {}'.format(timer.stop()))
+    print("Execution time: {}".format(timer.stop()))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -8,7 +8,8 @@ identifier = ...
 tmp_identifier = ...
 args = ...
 dependencies = ...
-def check_threshold(value): # -> str:
+
+def check_threshold(value):  # -> str:
     """
     Check if `value` is a valid threshold value.
 
@@ -20,7 +21,7 @@ def check_threshold(value): # -> str:
     """
     ...
 
-def get_parser(): # -> ArgumentParser:
+def get_parser():  # -> ArgumentParser:
     """The argument parser for the command line interface.
 
     :return: A ArgumentParser object.
@@ -28,7 +29,19 @@ def get_parser(): # -> ArgumentParser:
     """
     ...
 
-def do_magick_convert(input_file, output_file, threshold=..., enlighten_border=..., border=..., resize=..., deskew=..., trim=..., color=..., quality=..., blur=...):
+def do_magick_convert(
+    input_file,
+    output_file,
+    threshold=...,
+    enlighten_border=...,
+    border=...,
+    resize=...,
+    deskew=...,
+    trim=...,
+    color=...,
+    quality=...,
+    blur=...,
+):
     """
     Convert a input image file using the subcommand convert of the
     imagemagick suite.
@@ -38,7 +51,7 @@ def do_magick_convert(input_file, output_file, threshold=..., enlighten_border=.
     """
     ...
 
-def do_magick_identify(input_file): # -> dict[str, int]:
+def do_magick_identify(input_file):  # -> dict[str, int]:
     """The different informations of an image.
 
     :param input_file: The input file.
@@ -49,7 +62,9 @@ def do_magick_identify(input_file): # -> dict[str, int]:
     """
     ...
 
-def do_pdfimages(pdf_file, state, page_number=..., use_tmp_identifier=...): # -> CompletedProcess[str]:
+def do_pdfimages(
+    pdf_file, state, page_number=..., use_tmp_identifier=...
+):  # -> CompletedProcess[str]:
     """Convert a PDF file to images in the TIFF format.
 
     :param pdf_file: The input file.
@@ -63,7 +78,7 @@ def do_pdfimages(pdf_file, state, page_number=..., use_tmp_identifier=...): # ->
     """
     ...
 
-def do_pdfinfo_page_count(pdf_file): # -> int:
+def do_pdfinfo_page_count(pdf_file):  # -> int:
     """Get the amount of pages a PDF files have.
 
     :param str pdf_file: Path of the PDF file.
@@ -73,7 +88,7 @@ def do_pdfinfo_page_count(pdf_file): # -> int:
     """
     ...
 
-def do_pdftk_cat(pdf_files, state): # -> None:
+def do_pdftk_cat(pdf_files, state):  # -> None:
     """Join a list of PDF files into a single PDF file using the tool `pdftk`.
 
     :param list pdf_files: a list of PDF files
@@ -84,10 +99,8 @@ def do_pdftk_cat(pdf_files, state): # -> None:
     """
     ...
 
-def do_tesseract(input_file, languages=...): # -> CompletedProcess[str]:
-    ...
-
-def collect_images(state): # -> list[Unknown]:
+def do_tesseract(input_file, languages=...): ...
+def collect_images(state):  # -> list[Unknown]:
     """Collection all images using the temporary identifier in a common path.
 
     :param state: The state object.
@@ -98,7 +111,7 @@ def collect_images(state): # -> list[Unknown]:
     """
     ...
 
-def cleanup(state): # -> None:
+def cleanup(state):  # -> None:
     """Delete all images using the temporary identifier in a common path.
 
     :param state: The state object.
@@ -107,9 +120,7 @@ def cleanup(state): # -> None:
     :return: None"""
     ...
 
-def unify_page_size(input_file, output_file, margin=...): # -> None:
-    ...
-
+def unify_page_size(input_file, output_file, margin=...): ...
 def subcommand_convert_file(arguments):
     """Manipulate one input file
 
@@ -118,10 +129,8 @@ def subcommand_convert_file(arguments):
     """
     ...
 
-def subcommand_join_convert_pdf(arguments):
-    ...
-
-def subcommand_samples(input_file, state): # -> None:
+def subcommand_join_convert_pdf(arguments): ...
+def subcommand_samples(input_file, state):  # -> None:
     """Generate a list of example files with different threshold values.
 
     :param input_file: The input file.
@@ -136,27 +145,22 @@ def subcommand_samples(input_file, state): # -> None:
 class Timer:
     """Class to calculate the execution time. Mainly to test the speed
     improvements of the multiprocessing implementation."""
-    def __init__(self) -> None:
-        ...
-    
-    def stop(self): # -> str:
+
+    def __init__(self) -> None: ...
+    def stop(self):  # -> str:
         """Stop the time calculation and return the formated result.
 
         :return: The result
         :rtype: str
         """
         ...
-    
-
 
 class State:
     """This object holds runtime data for the multiprocessing environment."""
-    def __init__(self, args) -> None:
-        ...
-    
 
+    def __init__(self, args) -> None: ...
 
-def convert_file_paths(files): # -> list[Unknown]:
+def convert_file_paths(files):  # -> list[Unknown]:
     """Convert a list of file paths in a list of
     :class:`jfscripts._utils.FilePath` objects.
 
@@ -166,12 +170,11 @@ def convert_file_paths(files): # -> list[Unknown]:
     """
     ...
 
-def main(): # -> None:
+def main():  # -> None:
     """Main function.
 
     :return: None
     """
     ...
 
-if __name__ == '__main__':
-    ...
+if __name__ == "__main__": ...
