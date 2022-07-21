@@ -705,7 +705,7 @@ def unify_page_size(input_file, output_file, margin=0):
         width = page.mediaBox.getWidth()
         height = page.mediaBox.getHeight()
 
-        blank = PyPDF2.pdf.PageObject.createBlankPage(
+        blank = PyPDF2.PageObject.createBlankPage(
             None,
             max_width + 2 * margin,
             max_height + 2 * margin,

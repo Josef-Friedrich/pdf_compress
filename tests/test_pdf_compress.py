@@ -305,7 +305,7 @@ class TestUnitUnifyPageSize(TestCase):
     def run(self, margin, *dimensions):
         with patch("PyPDF2.PdfFileReader") as reader, patch(
             "PyPDF2.PdfFileWriter"
-        ), patch("PyPDF2.pdf.PageObject.createBlankPage") as blank, patch(
+        ), patch("PyPDF2.PageObject.createBlankPage") as blank, patch(
             "pdf_compress.open"
         ):
             reader.return_value.pages = self.mock_pdf2_pages(*dimensions)

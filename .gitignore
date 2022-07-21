@@ -22,3 +22,5 @@ doc/html/
 
 # mypy
 .mypy_cache/
+
+*.pdf
