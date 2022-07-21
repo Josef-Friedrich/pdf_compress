@@ -12,7 +12,7 @@ from unittest.mock import Mock, patch
 
 from _helper import TestCase, check_internet_connectifity, download
 from jfscripts import list_files
-from jfscripts._utils import check_dependencies
+from jfscripts.utils import check_dependencies
 
 import pdf_compress
 from pdf_compress import FilePath, State, Timer

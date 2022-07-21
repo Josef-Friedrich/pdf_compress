@@ -1,5 +1,7 @@
 #! /usr/bin/env python3
 
+from __future__ import annotations
+
 import argparse
 import multiprocessing
 import os
@@ -9,11 +11,11 @@ import shutil
 import time
 import uuid
 from importlib import metadata
-from typing import List
+from typing import List, Literal, Tuple, TypedDict
 
 import PyPDF2
 from jfscripts import list_files
-from jfscripts._utils import FilePath, Run, check_dependencies
+from jfscripts.utils import FilePath, Run, check_dependencies
 
 __version__: str = metadata.version("pdf_compress")
 
@@ -27,7 +29,29 @@ identifier = "magick"
 tmp_identifier = "{}_{}".format(identifier, uuid.uuid1())
 """Used for the identification of temporary files."""
 
-args = None
+
+class ArgumentsDefault:
+    color: bool
+    pdf: bool
+    auto_png: bool
+    ocr: bool
+    join: bool
+    backup: bool
+    input_files: str | List[str]
+    png: bool
+    deskew: bool
+    trim: bool
+    blur: bool
+    threshold: str
+    enlighten_border: bool
+    border: bool
+    resize: bool
+    quality: bool
+    force: bool
+    ocr_language: List[str]
+
+
+args = ArgumentsDefault()
 """The argparse object."""
 
 dependencies = (
@@ -489,8 +513,8 @@ def _do_magick_convert_enlighten_border(width: int, height: int) -> List[str]:
 
 
 def do_magick_convert(
-    input_file: str,
-    output_file: str,
+    input_file: FilePath,
+    output_file: FilePath,
     threshold: str | None = None,
     enlighten_border: bool = False,
     border: bool = False,
@@ -499,7 +523,7 @@ def do_magick_convert(
     trim: bool = False,
     color: bool = False,
     quality: int = 75,
-    blur: bool = False,
+    blur: int = False,
 ):
     """
     Convert a input image file using the subcommand convert of the
@@ -550,17 +574,22 @@ def do_magick_convert(
     return run.run(cmd_args)
 
 
-def do_magick_identify(input_file: str):
+class Image(TypedDict):
+    width: int
+    height: int
+    colors: int
+
+
+def do_magick_identify(input_file: FilePath) -> Image:
     """The different informations of an image.
 
     :param input_file: The input file.
-    :type input_file: jfscripts._utils.FilePath
 
     :return: A directory with the keys `width`, `height` and `colors`.
     :rtype: dict
     """
 
-    def _get_by_format(input_file: str, format):
+    def _get_by_format(input_file: FilePath, format: Literal["%w", "%h", "%k"]) -> str:
         return run.check_output(
             _do_magick_command("identify") + ["-format", format, str(input_file)]
         ).decode("utf-8")
@@ -582,7 +611,7 @@ def do_pdfimages(
 
     :param pdf_file: The input file.
     :param state: The state object.
-    :param int page_number: Extract only the page with a specific page number.
+    :param page_number: Extract only the page with a specific page number.
 
     :return: The return value of `subprocess.run`.
     :rtype: subprocess.CompletedProcess
@@ -601,7 +630,7 @@ def do_pdfimages(
     return run.run(command, cwd=state.common_path)
 
 
-def do_pdfinfo_page_count(pdf_file):
+def do_pdfinfo_page_count(pdf_file: FilePath) -> int:
     """Get the amount of pages a PDF files have.
 
     :param str pdf_file: Path of the PDF file.
@@ -614,14 +643,12 @@ def do_pdfinfo_page_count(pdf_file):
     return int(page_count.group(1))
 
 
-def do_pdftk_cat(pdf_files, state):
+def do_pdftk_cat(pdf_files: List[FilePath], state: State) -> None:
     """Join a list of PDF files into a single PDF file using the tool `pdftk`.
 
-    :param list pdf_files: a list of PDF files
+    :param pdf_files: a list of PDF files
     :param state: The state object.
-    :type state: jfscripts.pdf_compress.State
 
-    :return: None
     """
     cmd = ["pdftk"]
 
@@ -638,7 +665,7 @@ def do_pdftk_cat(pdf_files, state):
         print("Successfully created: {}".format(output_file_path))
 
 
-def do_tesseract(input_file, languages=["deu", "eng"]):
+def do_tesseract(input_file: FilePath, languages: List[str] = ["deu", "eng"]):
     cmd_args = ["tesseract"]
     if languages:
         cmd_args += ["-l", "+".join(languages)]
@@ -682,9 +709,11 @@ def cleanup(state: "State"):
             os.remove(os.path.join(state.common_path, work_file))
 
 
-def unify_page_size(input_file, output_file, margin=0) -> None:
-    input_file = open(str(input_file), "rb")
-    input_pdf = PyPDF2.PdfFileReader(input_file)
+def unify_page_size(
+    input_file: FilePath, output_file: FilePath, margin: int = 0
+) -> None:
+    _input_file = open(str(input_file), "rb")
+    input_pdf = PyPDF2.PdfFileReader(_input_file)
 
     output_pdf = PyPDF2.PdfFileWriter()
 
@@ -717,22 +746,25 @@ def unify_page_size(input_file, output_file, margin=0) -> None:
         )
         output_pdf.addPage(blank)
 
-    output_file = open(str(output_file), "wb")
-    output_pdf.write(output_file)
+    _output_file = open(str(output_file), "wb")
+    output_pdf.write(_output_file)
 
 
 ###############################################################################
 # subcommand wrapper functions
 ###############################################################################
 
+FileAndState = Tuple[FilePath, "State"]
 
-def subcommand_convert_file(arguments):
+
+def subcommand_convert_file(file_and_state: FileAndState):
     """Manipulate one input file
 
     :param tuple arguments: A tuple containing two elements: The first element
       is the input_file file object and the second element is the state object.
     """
-    input_file = arguments[0]
+
+    input_file = file_and_state[0]
 
     if args.color:
         intermediate_extension = "jp2"
@@ -795,12 +827,14 @@ def subcommand_convert_file(arguments):
     return output_file
 
 
-def subcommand_join_convert_pdf(arguments):
-    input_file = arguments[0]
+def subcommand_join_convert_pdf(file_and_state: FileAndState):
+    """Because of multiprocessing only one parameter."""
     if args.ocr:
         extension = "tiff"
     else:
         extension = "pdf"
+
+    input_file = file_and_state[0]
 
     output_file = input_file.new(extension=extension)
     process = do_magick_convert(input_file, output_file)
@@ -825,9 +859,9 @@ def subcommand_samples(input_file: FilePath, state: "State") -> None:
 
     args = state.args
 
-    def fix_output_path(output_file):
-        output_file = str(output_file).replace("_-000", "")
-        return FilePath(output_file, absolute=True)
+    def fix_output_path(output_file: FilePath):
+        _output_file = str(output_file).replace("_-000", "")
+        return FilePath(_output_file, absolute=True)
 
     if state.input_is_pdf:
         page_count = do_pdfinfo_page_count(input_file)
@@ -906,7 +940,7 @@ class Timer:
 class State:
     """This object holds runtime data for the multiprocessing environment."""
 
-    args: argparse.Namespace
+    args: ArgumentsDefault
     """argparse arguments"""
 
     cwd: str
@@ -924,7 +958,7 @@ class State:
     input_is_pdf: bool
     """Boolean that indicates if the first file is a pdf."""
 
-    def __init__(self, args):
+    def __init__(self, args: ArgumentsDefault):
         self.args = args
         self.cwd = os.getcwd()
         self.input_files = []
@@ -1066,12 +1100,12 @@ def main():
         input_files = convert_file_paths(state.input_files)
         if args.multiprocessing:
             pool = multiprocessing.Pool()
-            data = []
+            data: List[FileAndState] = []
             for input_file in input_files:
                 data.append((input_file, state))
             files_converted = pool.map(subcommand_join_convert_pdf, data)
         else:
-            files_converted = []
+            files_converted: List[FilePath] = []
             for input_file in input_files:
                 files_converted.append(subcommand_join_convert_pdf((input_file, state)))
         do_pdftk_cat(files_converted, state)
