@@ -8,10 +8,14 @@ import re
 import shutil
 import time
 import uuid
+from importlib import metadata
+from typing import List
 
 import PyPDF2
-from jfscripts import __version__, list_files
+from jfscripts import list_files
 from jfscripts._utils import FilePath, Run, check_dependencies
+
+__version__: str = metadata.version("pdf_compress")
 
 run = Run()
 state = None
@@ -36,15 +40,11 @@ dependencies = (
 )
 
 
-def check_threshold(value):
+def check_threshold(value: int | str) -> str:
     """
     Check if `value` is a valid threshold value.
 
-    :param value:
-    :type value: integer or string
-
     :return: A normalized threshold string (`90%`)
-    :rtype: string
     """
     value = re.sub(r"%$", "", str(value))
     value = int(value)
@@ -54,7 +54,7 @@ def check_threshold(value):
     return "{}%".format(value)
 
 
-def get_parser():
+def get_parser() -> argparse.ArgumentParser:
     """The argument parser for the command line interface.
 
     :return: A ArgumentParser object.
@@ -459,15 +459,14 @@ def _do_magick_command(command: str):
         return [command]
 
 
-def _do_magick_convert_enlighten_border(width, height):
+def _do_magick_convert_enlighten_border(width: int, height: int) -> List[str]:
     """
     Build the command line arguments to enlighten the border in four regions.
 
-    :param int width: The width of the image.
-    :param int height: The height of the image.
+    :param width: The width of the image.
+    :param height: The height of the image.
 
     :return: Command line arguments for imagemagicks’ `convert`.
-    :rtype: list
     """
     border = int(round(((width + height) / 2) * 0.05))
 
@@ -482,7 +481,7 @@ def _do_magick_convert_enlighten_border(width, height):
         "{}x{}+{}+{}".format(border, height - border, 0, border),
     )
 
-    out = []
+    out: List[str] = []
     for region in r:
         out += ["-region", region, "-level", "0%,30%"]
 
@@ -490,17 +489,17 @@ def _do_magick_convert_enlighten_border(width, height):
 
 
 def do_magick_convert(
-    input_file,
-    output_file,
-    threshold=None,
-    enlighten_border=False,
-    border=False,
-    resize=False,
-    deskew=False,
-    trim=False,
-    color=False,
-    quality=75,
-    blur=False,
+    input_file: str,
+    output_file: str,
+    threshold: str | None = None,
+    enlighten_border: bool = False,
+    border: bool = False,
+    resize: bool = False,
+    deskew: bool = False,
+    trim: bool = False,
+    color: bool = False,
+    quality: int = 75,
+    blur: bool = False,
 ):
     """
     Convert a input image file using the subcommand convert of the
@@ -551,7 +550,7 @@ def do_magick_convert(
     return run.run(cmd_args)
 
 
-def do_magick_identify(input_file):
+def do_magick_identify(input_file: str):
     """The different informations of an image.
 
     :param input_file: The input file.
@@ -561,7 +560,7 @@ def do_magick_identify(input_file):
     :rtype: dict
     """
 
-    def _get_by_format(input_file, format):
+    def _get_by_format(input_file: str, format):
         return run.check_output(
             _do_magick_command("identify") + ["-format", format, str(input_file)]
         ).decode("utf-8")
@@ -573,13 +572,16 @@ def do_magick_identify(input_file):
     }
 
 
-def do_pdfimages(pdf_file, state, page_number=None, use_tmp_identifier=True):
+def do_pdfimages(
+    pdf_file: FilePath,
+    state: "State",
+    page_number: int | None = None,
+    use_tmp_identifier: bool = True,
+):
     """Convert a PDF file to images in the TIFF format.
 
     :param pdf_file: The input file.
-    :type pdf_file: jfscripts._utils.FilePath
     :param state: The state object.
-    :type state: jfscripts.pdf_compress.State
     :param int page_number: Extract only the page with a specific page number.
 
     :return: The return value of `subprocess.run`.
@@ -649,17 +651,14 @@ def do_tesseract(input_file, languages=["deu", "eng"]):
 ###############################################################################
 
 
-def collect_images(state):
+def collect_images(state: "State"):
     """Collection all images using the temporary identifier in a common path.
-
-    :param state: The state object.
-    :type state: jfscripts.pdf_compress.State
 
     :return: A sorted list of image paths.
     :rtype: list
     """
     prefix = state.common_path
-    out = []
+    out: List[str] = []
     for input_file in os.listdir(prefix):
         if (
             tmp_identifier in input_file
@@ -670,7 +669,7 @@ def collect_images(state):
     return out
 
 
-def cleanup(state):
+def cleanup(state: "State"):
     """Delete all images using the temporary identifier in a common path.
 
     :param state: The state object.
@@ -683,7 +682,7 @@ def cleanup(state):
             os.remove(os.path.join(state.common_path, work_file))
 
 
-def unify_page_size(input_file, output_file, margin=0):
+def unify_page_size(input_file, output_file, margin=0) -> None:
     input_file = open(str(input_file), "rb")
     input_pdf = PyPDF2.PdfFileReader(input_file)
 
@@ -818,15 +817,10 @@ def subcommand_join_convert_pdf(arguments):
     return output_file
 
 
-def subcommand_samples(input_file, state):
+def subcommand_samples(input_file: FilePath, state: "State") -> None:
     """Generate a list of example files with different threshold values.
 
-    :param input_file: The input file.
-    :type input_file: jfscripts._utils.FilePath
-    :param state: The state object.
-    :type state: jfscripts.pdf_compress.State
-
-    :return: None
+    :param The input file.
     """
 
     args = state.args
@@ -889,7 +883,7 @@ def subcommand_samples(input_file, state):
 ###############################################################################
 
 
-class Timer(object):
+class Timer:
     """Class to calculate the execution time. Mainly to test the speed
     improvements of the multiprocessing implementation."""
 
@@ -909,25 +903,37 @@ class Timer(object):
         return "{:.1f}s".format(self.end - self.begin)
 
 
-class State(object):
+class State:
     """This object holds runtime data for the multiprocessing environment."""
+
+    args: argparse.Namespace
+    """argparse arguments"""
+
+    cwd: str
+    """The current working directory"""
+
+    input_files: List[str]
+    """A list of all input files."""
+
+    common_path: str
+    """The common path prefix of all input files."""
+
+    first_input_file: FilePath
+    """The first input file."""
+
+    input_is_pdf: bool
+    """Boolean that indicates if the first file is a pdf."""
 
     def __init__(self, args):
         self.args = args
-        """argparse arguments"""
-
         self.cwd = os.getcwd()
-        """The current working directory"""
-
         self.input_files = []
-        """A list of all input files."""
         if isinstance(self.args.input_files, str):
             self.input_files = [self.args.input_files]
         else:
             self.input_files = list_files.list_files(self.args.input_files)
 
         self.common_path = list_files.common_path(self.input_files)
-        """The common path prefix of all input files."""
 
         if self.common_path == "":
             self.common_path = self.cwd
@@ -941,7 +947,7 @@ class State(object):
             self.input_is_pdf = True
 
 
-def convert_file_paths(files):
+def convert_file_paths(files: List[str]) -> List[FilePath]:
     """Convert a list of file paths in a list of
     :class:`jfscripts._utils.FilePath` objects.
 
@@ -949,7 +955,7 @@ def convert_file_paths(files):
 
     :return: a list of  :class:`jfscripts._utils.FilePath` objects.
     """
-    out = []
+    out: List[FilePath] = []
     for f in files:
         out.append(FilePath(f, absolute=True))
     return out
