@@ -8,10 +8,11 @@ import os
 import random
 import re
 import shutil
+from subprocess import CompletedProcess
 import time
 import uuid
 from importlib import metadata
-from typing import List, Literal, Tuple, TypedDict
+from typing import List, Literal, Tuple, TypedDict, cast
 
 import PyPDF2
 from jfscripts import list_files
@@ -31,25 +32,32 @@ tmp_identifier = "{}_{}".format(identifier, uuid.uuid1())
 
 
 class ArgumentsDefault:
-    color: bool
-    pdf: bool
+    auto_black_white: bool
+    auto_color: bool
     auto_png: bool
-    ocr: bool
-    join: bool
     backup: bool
-    input_files: str | List[str]
-    png: bool
-    deskew: bool
-    trim: bool
     blur: bool
-    threshold: str
-    enlighten_border: bool
     border: bool
-    resize: bool
-    quality: bool
+    color: bool
+    colorize: bool
+    deskew: bool
+    enlighten_border: bool
     force: bool
+    input_files: str | List[str]
+    join: bool
+    multiprocessing: bool
+    no_cleanup: bool
     ocr_language: List[str]
-
+    ocr: bool
+    pdf: bool
+    png: bool
+    quality: int
+    resize: bool
+    subcommand: str
+    threshold: str
+    trim: bool
+    unify: bool
+    verbose: bool
 
 args = ArgumentsDefault()
 """The argparse object."""
@@ -606,7 +614,7 @@ def do_pdfimages(
     state: "State",
     page_number: int | None = None,
     use_tmp_identifier: bool = True,
-):
+) -> CompletedProcess[str]:
     """Convert a PDF file to images in the TIFF format.
 
     :param pdf_file: The input file.
@@ -665,7 +673,7 @@ def do_pdftk_cat(pdf_files: List[FilePath], state: State) -> None:
         print("Successfully created: {}".format(output_file_path))
 
 
-def do_tesseract(input_file: FilePath, languages: List[str] = ["deu", "eng"]):
+def do_tesseract(input_file: FilePath, languages: List[str] = ["deu", "eng"]) -> CompletedProcess[str]:
     cmd_args = ["tesseract"]
     if languages:
         cmd_args += ["-l", "+".join(languages)]
@@ -859,7 +867,7 @@ def subcommand_samples(input_file: FilePath, state: "State") -> None:
 
     args = state.args
 
-    def fix_output_path(output_file: FilePath):
+    def fix_output_path(output_file: str | FilePath) -> FilePath:
         _output_file = str(output_file).replace("_-000", "")
         return FilePath(_output_file, absolute=True)
 
@@ -1002,7 +1010,7 @@ def main():
     """
     timer = Timer()
     global args
-    args = get_parser().parse_args()
+    args = cast(ArgumentsDefault, get_parser().parse_args())
 
     run.setup(verbose=args.verbose, colorize=args.colorize)
     global state
@@ -1064,7 +1072,7 @@ def main():
                 data.append((input_file, state))
             output_files = pool.map(subcommand_convert_file, data)
         else:
-            output_files = []
+            output_files: List[FilePath] = []
             for input_file in input_files:
                 output_files.append(subcommand_convert_file((input_file, state)))
 

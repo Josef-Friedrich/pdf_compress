@@ -196,7 +196,7 @@ plugins = ["setuptools"]
 
 [[package]]
 name = "jfscripts"
-version = "1.0.0"
+version = "1.1.0"
 description = "A collection of my Python scripts. Maybe they are useful for someone else."
 category = "main"
 optional = false
@@ -204,6 +204,7 @@ python-versions = ">=3.8,<4.0"
 
 [package.dependencies]
 termcolor = ">=1.1.0,<2.0.0"
+typing-extensions = ">=4.3.0,<5.0.0"
 
 [[package]]
 name = "jinja2"
@@ -329,7 +330,7 @@ readme = ["docutils (==0.16)", "readme-renderer[md] (>=27.0)"]
 
 [[package]]
 name = "readme-patcher"
-version = "0.5.0"
+version = "0.6.0"
 description = "Generate README files from templates. Allow input from functions calls and cli output."
 category = "dev"
 optional = false
@@ -455,7 +456,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "03c31542fc7fd24c06692a48e5f9d865e7eab199adca5704eaa830f52951221e"
+content-hash = "d05e54b7a5d086788578edc89a9f40c77b1f22c258e239e775a6ae0eaca4b4d7"
 
 [metadata.files]
 apeye = []
