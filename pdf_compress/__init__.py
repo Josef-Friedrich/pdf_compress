@@ -8,10 +8,10 @@ import os
 import random
 import re
 import shutil
-from subprocess import CompletedProcess
 import time
 import uuid
 from importlib import metadata
+from subprocess import CompletedProcess
 from typing import List, Literal, Tuple, TypedDict, cast
 
 import PyPDF2
@@ -58,6 +58,7 @@ class ArgumentsDefault:
     trim: bool
     unify: bool
     verbose: bool
+
 
 args = ArgumentsDefault()
 """The argparse object."""
@@ -673,7 +674,9 @@ def do_pdftk_cat(pdf_files: List[FilePath], state: State) -> None:
         print("Successfully created: {}".format(output_file_path))
 
 
-def do_tesseract(input_file: FilePath, languages: List[str] = ["deu", "eng"]) -> CompletedProcess[str]:
+def do_tesseract(
+    input_file: FilePath, languages: List[str] = ["deu", "eng"]
+) -> CompletedProcess[str]:
     cmd_args = ["tesseract"]
     if languages:
         cmd_args += ["-l", "+".join(languages)]
