@@ -1,7 +1,6 @@
 import os
 import socket
 import tempfile
-import unittest
 from typing import Optional
 from urllib.request import urlretrieve
 
@@ -43,11 +42,3 @@ def download(
         )
         urlretrieve(url, local_path)
         return local_path
-
-
-class TestCase(unittest.TestCase):
-    def assertExists(self, path: str, message: Optional[str] = None):
-        self.assertTrue(os.path.exists(path), message)
-
-    def assertExistsNot(self, path: str, message: Optional[str] = None):
-        self.assertFalse(os.path.exists(path), message)

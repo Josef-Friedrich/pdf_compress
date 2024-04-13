@@ -1,5 +1,40 @@
 {
-  "python.testing.unittestEnabled": false,
+  "files.exclude": {
+    "**/__pycache__/": true,
+    "**/.mypy_cache/": true,
+    "**/.pytest_cache/": true,
+    "**/.tox/": true,
+    "**/*.egg-info": true,
+    "**/*.py[cod]": true,
+    "**/*.ruff_cache/": true,
+    "**/*.venv/": true,
+    "**/dist/": true,
+    "**/doc/html/": true,
+    "**/docs/_build/": true,
+    "**/MANIFEST": true
+  },
+  "[python]": {
+    "editor.rulers": [
+      79,
+      80,
+      88
+    ],
+    "editor.defaultFormatter": "charliermarsh.ruff"
+  },
+  "python.analysis.diagnosticSeverityOverrides": {
+    "reportPrivateImportUsage": "none",
+    "reportUnusedImport": "information",
+    "reportUnusedExpression": "information",
+    "reportImportCycles": "information"
+  },
+  "python.defaultInterpreterPath": ".venv/bin/python",
   "python.testing.pytestEnabled": true,
-  "python.formatting.provider": "black"
+  "python.testing.pytestArgs": [
+    "--capture=tee-sys",
+    "-vv",
+    "--rootdir",
+    "${workspaceFolder}/tests",
+    "-m",
+    "not (slow or gui)"
+  ]
 }

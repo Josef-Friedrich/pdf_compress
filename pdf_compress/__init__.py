@@ -1026,7 +1026,6 @@ def main():
     ##
 
     if args.subcommand in ["convert", "cv", "c"]:
-
         if args.join and not args.pdf:
             args.pdf = True
 

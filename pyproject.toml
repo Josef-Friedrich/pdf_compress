@@ -16,13 +16,13 @@ PyPDF2 = "^2.6.0"
 jfscripts = "^1.1.0"
 
 [tool.poetry.group.dev.dependencies]
-readme-patcher = "^0.6.0"
-black = "^22.6.0"
-isort = "^5.10.1"
+readme-patcher = "^0"
+ruff = "^0"
+pytest = "^8"
 
 [build-system]
-requires = ["poetry>=1.2.0b2"]
-build-backend = "poetry.masonry.api"
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 "pdf-compress.py" = "pdf_compress:main"
