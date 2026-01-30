@@ -711,7 +711,6 @@ def cleanup(state: "State"):
     """Delete all images using the temporary identifier in a common path.
 
     :param state: The state object.
-    :type state: jfscripts.pdf_compress.State
 
     :return: None"""
 
