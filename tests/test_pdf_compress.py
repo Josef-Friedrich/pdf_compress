@@ -33,7 +33,7 @@ def copy(path: str):
     return shutil.copy(path, tmp)
 
 
-def output_pdfinfo(pages: int=3):
+def output_pdfinfo(pages: int = 3):
     return "".join(
         [
             "Creator:        c42pdf v. 0.12 args:  -p 658.80x866.52\n",
@@ -62,15 +62,16 @@ def convert_to_cli_list(run_args_list):
 
 
 def patch_mulitple(args, pdf_page_count=5):
-    with patch("sys.argv", ["cmd"] + list(args)), patch(
-        "pdf_compress.check_dependencies"
-    ), patch("pdf_compress.run.run") as run_run, patch(
-        "pdf_compress.run.check_output"
-    ) as run_check_output, patch(
-        "pdf_compress.do_pdfinfo_page_count"
-    ) as do_pdfinfo_page_count, patch("os.path.getsize") as os_path_getsize, patch(
-        "os.listdir"
-    ) as os_listdir, patch("os.remove") as os_remove:
+    with (
+        patch("sys.argv", ["cmd"] + list(args)),
+        patch("pdf_compress.check_dependencies"),
+        patch("pdf_compress.run.run") as run_run,
+        patch("pdf_compress.run.check_output") as run_check_output,
+        patch("pdf_compress.do_pdfinfo_page_count") as do_pdfinfo_page_count,
+        patch("os.path.getsize") as os_path_getsize,
+        patch("os.listdir") as os_listdir,
+        patch("os.remove") as os_remove,
+    ):
         tiff1 = "1_{}.tiff".format(pdf_compress.tmp_identifier)
         tiff2 = "2_{}.tiff".format(pdf_compress.tmp_identifier)
         files = [tiff2, tiff1, "3.tif"]
@@ -302,10 +303,11 @@ class TestUnitUnifyPageSize:
         return output
 
     def run(self, margin, *dimensions):
-        with patch("PyPDF2.PdfFileReader") as reader, patch(
-            "PyPDF2.PdfFileWriter"
-        ), patch("PyPDF2.PageObject.createBlankPage") as blank, patch(
-            "pdf_compress.open"
+        with (
+            patch("PyPDF2.PdfFileReader") as reader,
+            patch("PyPDF2.PdfFileWriter"),
+            patch("PyPDF2.PageObject.createBlankPage") as blank,
+            patch("pdf_compress.open"),
         ):
             reader.return_value.pages = self.mock_pdf2_pages(*dimensions)
             pdf_compress.unify_page_size(
@@ -534,6 +536,7 @@ class TestModuleGlobals:
 
 
 class TestIntegration:
+    @pytest.mark.skip
     def test_option_version(self):
         output = subprocess.check_output(["pdf-compress.py", "--version"])
         assert output

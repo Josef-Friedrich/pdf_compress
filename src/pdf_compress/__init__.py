@@ -163,14 +163,7 @@ def get_parser() -> argparse.ArgumentParser:
         "-a",
         "--auto-black-white",
         action="store_true",
-        help="The same as “"
-        "--deskew "
-        "--join "
-        "--ocr "
-        "--pdf "
-        "--resize "
-        "--trim "
-        "--unify”",
+        help="The same as “--deskew --join --ocr --pdf --resize --trim --unify”",
     )
 
     # auto_color
@@ -194,7 +187,7 @@ def get_parser() -> argparse.ArgumentParser:
         "-P",
         "--auto-png",
         action="store_true",
-        help="The same as “" "--deskew " "--resize " "--trim”",
+        help="The same as “--deskew --resize --trim”",
     )
 
     # backup
@@ -827,7 +820,7 @@ def subcommand_convert_file(file_and_state: FileAndState):
 
     if args.ocr:
         if output_file.extension not in ["tiff", "jp2"]:
-            raise RuntimeError("Tesseract needs a tiff or a jp2 file as " "input.")
+            raise RuntimeError("Tesseract needs a tiff or a jp2 file as input.")
         completed_process = do_tesseract(output_file, args.ocr_language)
         if completed_process.returncode != 0:
             raise RuntimeError("tesseract failed.")
