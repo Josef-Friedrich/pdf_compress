@@ -15,7 +15,7 @@ classifiers = [
 ]
 dependencies = [
     "PyPDF2>=2.6.0,<3",
-    "jfscripts>=1.1.0,<2",
+    "termcolor>=3.3.0",
 ]
 
 [project.urls]

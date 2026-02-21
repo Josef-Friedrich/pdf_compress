@@ -3,20 +3,265 @@
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import multiprocessing
 import os
 import random
 import re
 import shutil
+import subprocess
 import time
 import uuid
+from argparse import ArgumentParser
 from importlib import metadata
+from pathlib import Path
 from subprocess import CompletedProcess
-from typing import List, Literal, Tuple, TypedDict, cast
+from typing import Callable, List, Literal, Tuple, TypedDict, cast
 
 import PyPDF2
-from jfscripts import list_files
-from jfscripts.utils import FilePath, Run, check_dependencies
+from termcolor import colored
+from typing_extensions import TypedDict, Unpack
+
+# from jfscripts.list_files
+
+
+def is_glob(path_spec: str) -> bool:
+    if re.search(r"[\*\?]", path_spec) or re.search(r"\[\!?.*\]", path_spec):
+        return True
+    else:
+        return False
+
+
+def common_path(paths: List[str]) -> str:
+    common_path = os.path.commonpath(paths)
+    if os.path.isdir(common_path):
+        return common_path
+    else:
+        return str(Path(common_path).parent.resolve())
+
+
+def _split_glob(glob_path: str) -> Tuple[str, str]:
+    """Split a file path (e. g.: /data/(asterisk).txt) containing glob wildcard
+    characters in a glob free path prefix (e. g.: /data) and a glob
+    pattern (e. g. (asterisk).txt).
+
+    :param glob_path: A file path containing glob wildcard characters.
+    """
+    globs = glob_path.split(os.path.sep)
+    no_globs: List[str] = []
+    for g in globs:
+        if not is_glob(g):
+            no_globs.append(g)
+        else:
+            break
+    if not no_globs:
+        dir_path = "."
+    else:
+        dir_path = os.path.sep.join(no_globs)
+    return (
+        dir_path,
+        os.path.sep.join(globs[len(no_globs) :]),
+    )
+
+
+def _list_files_all(dir_path: str) -> List[str]:
+    output: List[str] = []
+    for root, dirs, files in os.walk(dir_path):
+        for d in dirs:
+            output.append(os.path.join(root, d))
+        for f in files:
+            output.append(os.path.join(root, f))
+    output.sort()
+    return output
+
+
+def _list_files_filter(dir_path: str, glob_pattern: str) -> List[str]:
+    output: List[str] = []
+    for root, _, files in os.walk(dir_path):
+        relroot = root[len(dir_path) :]
+        for f in files:
+            relfiles = os.path.join(relroot, f)
+            if fnmatch.fnmatch(relfiles, glob_pattern):
+                output.append(os.path.join(root, f))
+    output.sort()
+    return output
+
+
+def list_files(files: List[str], default_glob: str | None = None):
+    """
+    :param list files: A list of file paths or a single element list containing
+      a glob string.
+
+    :param string default_glob: A default glob pattern like “(asterisk).txt”.
+      This argument is only taken into account, if “element” is a list with
+      only one entry and this entry is a path to a directory.
+    """
+    if len(files) > 1:
+        return files
+
+    file_path = files[0]
+
+    if not is_glob(file_path):
+        if os.path.isdir(file_path):
+            if default_glob:
+                return _list_files_filter(file_path, default_glob)
+            else:
+                return _list_files_all(file_path)
+        else:  # not a directory
+            return [file_path]
+
+    else:  # is glob
+        glob_prefix, glob_pattern = _split_glob(file_path)
+        return _list_files_filter(glob_prefix, glob_pattern)
+
+    raise ValueError("Something went wrong.")
+
+
+# from jfscripts.utils
+
+
+class SubprocessKwarg(TypedDict, total=False):
+    stdout: int
+    stderr: int
+    cwd: str
+
+
+class Run:
+    PIPE = subprocess.PIPE
+
+    def __init__(self, verbose: bool = False, colorize: bool = False) -> None:
+        self.setup(verbose, colorize)
+
+    def setup(self, verbose: bool = False, colorize: bool = False) -> None:
+        self.verbose = verbose
+        self.colorize = colorize
+
+    def _print_cmd(self, cmd: List[str]) -> None:
+        if self.colorize:
+            output: List[str] = []
+            for arg in cmd:
+                if arg.startswith("--"):
+                    output.append(colored(arg, color="yellow"))
+                elif arg.startswith("-"):
+                    output.append(colored(arg, color="blue"))
+                elif os.path.exists(arg):
+                    output.append(colored(arg, color="white", on_color="on_cyan"))
+                else:
+                    output.append(arg)
+            print(" ".join(output))
+        else:
+            print(" ".join(cmd))
+
+    def run(
+        self, cmd: List[str], **kwargs: Unpack[SubprocessKwarg]
+    ) -> CompletedProcess[str]:
+        if self.verbose:
+            self._print_cmd(cmd)
+        return subprocess.run(cmd, encoding="utf-8", **kwargs)
+
+    def check_output(self, cmd: List[str], **kwargs: Unpack[SubprocessKwarg]) -> bytes:
+        if self.verbose:
+            self._print_cmd(cmd)
+        return subprocess.check_output(cmd, **kwargs)
+
+
+def check_dependencies(
+    *executables: Tuple[str, str] | str, raise_error: bool = True
+) -> bool:
+    """Check if the given executables are existing in $PATH.
+
+    :param executables: A tuple of executables to check for their
+      existence in $PATH. Each element of the tuple can be either a string
+      (e. g. `pdfimages`) or a itself a tuple `('pdfimages', 'poppler')`.
+      The first entry of this tuple is the name of the executable the second
+      entry is a description text which is displayed in the raised exception.
+
+    :param raise_error: Raise an error if an executable doesn’t exist.
+
+    :return: True if all executables exist. False if one or
+      more executables not exist.
+    """
+    errors: List[str] = []
+    for executable in executables:
+        if isinstance(executable, tuple):
+            if not shutil.which(executable[0]):
+                errors.append("{} ({})".format(executable[0], executable[1]))
+        else:
+            if not shutil.which(executable):
+                errors.append(executable)
+
+    if errors:
+        if raise_error:
+            raise SystemError("Some commands are not installed: " + ", ".join(errors))
+        else:
+            return False
+    else:
+        return True
+
+
+class FilePath:
+    absolute: bool
+    """Boolean value indicating whether the path is an absolute or an
+    relative path."""
+
+    filename: str
+    """The filename is the combination of the basename and the
+    extension, e. g. `file.ext`."""
+
+    extension: str
+    """The extension of the file, e. g. `ext`."""
+
+    basename: str
+    """The basename of the file, e. g. `file`."""
+
+    base: str
+    """The path without an extension, e. g. `/home/document/file`."""
+
+    def __init__(self, path: str, absolute: bool = False):
+        self.absolute = absolute
+        if self.absolute:
+            self.path = os.path.abspath(path)
+        else:
+            self.path = os.path.relpath(path)
+        self.filename = os.path.basename(path)
+        self.extension = os.path.splitext(self.path)[1][1:]
+        self.basename = self.filename[: -len(self.extension) - 1]
+        self.base = self.path[: -len(self.extension) - 1]
+
+    def __str__(self):
+        return self.path
+
+    def __eq__(self, other: object) -> bool:
+        return self.path == other.path
+
+    def _export(self, path: str) -> FilePath:
+        return FilePath(path, self.absolute)
+
+    def new(
+        self, extension: str | None = None, append: str = "", del_substring: str = ""
+    ) -> FilePath:
+        """
+        :param extension: The extension of the new file path.
+        :param append: String to append on the basename. This string
+          is located before the extension.
+        :param del_substring: String to delete from the new file path.
+
+        :return: A new file path object.
+
+        """
+        if not extension:
+            extension = self.extension
+        new = "{}{}.{}".format(self.base, append, extension)
+        if del_substring:
+            new = new.replace(del_substring, "")
+        return self._export(new)
+
+    def remove(self) -> None:
+        """Remove the file."""
+        os.remove(self.path)
+
+
+# end jfscripts
 
 __version__: str = metadata.version("pdf_compress")
 

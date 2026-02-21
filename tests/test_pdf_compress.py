@@ -12,11 +12,9 @@ from unittest.mock import Mock, patch
 
 import pytest
 from _helper import check_internet_connectifity, download
-from jfscripts import list_files
-from jfscripts.utils import check_dependencies
 
 import pdf_compress
-from pdf_compress import FilePath, State, Timer
+from pdf_compress import FilePath, State, Timer, check_dependencies, list_files
 
 
 def get_state():
